@@ -1,11 +1,14 @@
 import os
 import discord
+import keep_alive
 from dotenv import load_dotenv
 from discord.ext import commands
 from wordgame import WordGame
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+
+keep_alive.keep_alive()
 
 bot = commands.Bot(command_prefix='$')
 bot.channel = None
