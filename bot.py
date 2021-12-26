@@ -1,11 +1,13 @@
 import os
 import discord
 import keep_alive
-from dotenv import load_dotenv
 from discord.ext import commands
 from wordgame import WordGame
 
-load_dotenv()
+if os.getenv("REPL_ID") == None:
+  from dotenv import load_dotenv
+  load_dotenv()
+
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 keep_alive.keep_alive()
@@ -20,6 +22,9 @@ async def on_command_error(ctx, error):
         await ctx.send(f"**{str(error)}**")
     elif isinstance(error, commands.ChannelNotFound):
         await ctx.send("**No channel has been chosen**")
+    else:
+        with open('err.log', 'a') as f:
+            f.write(f"{str(error)}\n")
 
 class Manage(commands.Cog):
     def __init__(self, bot):
