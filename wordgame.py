@@ -28,7 +28,6 @@ class WordGame():
         return word in self.words
 
     def is_word_valid(self, word):
-        print(f"current letter: {self.get_current_letter()}, word[0]: {word[0]}, is_word_used: {self.is_word_used(word)}, check: {self.dict.check(word)}")
         return self.get_current_letter() == word[0] and not self.is_word_used(word) and self.dict.check(word)
 
     def is_last_player(self, player):

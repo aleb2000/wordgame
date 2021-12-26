@@ -2,8 +2,8 @@ language = "python3"
 run = "python bot.py"
 entrypoint = "bot.py"
 
-[packager]
+[packager.features]
 # Enables the package search sidebar
 packageSearch = true
 # Enabled package guessing
-guessImports = true
+guessImports = false
