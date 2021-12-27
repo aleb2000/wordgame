@@ -3,10 +3,7 @@ import discord
 import keep_alive
 from discord.ext import commands
 from wordgame import WordGame
-
-if os.getenv("REPL_ID") == None:
-  from dotenv import load_dotenv
-  load_dotenv()
+from replit import db
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 
@@ -14,6 +11,8 @@ keep_alive.keep_alive()
 
 bot = commands.Bot(command_prefix='$')
 bot.channel = None
+
+
 bot.game = WordGame()
 
 @bot.event
@@ -30,9 +29,16 @@ class Manage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if "channel_id" in db.keys():
+            self.bot.channel = self.bot.get_channel(int(db["channel_id"]))
+        self.bot.game.load()
+
     @commands.command(name="set-channel", help="Set the current channel as the channel to play the word game")
     async def set_channel(self, ctx):
         self.bot.channel = ctx.message.channel
+        db["channel_id"] = ctx.message.channel.id
         await ctx.send("**This channel has been set as the word game channel**")
 
     @commands.command(name="get-channel", help="Get the channel that is currently set to play the word game")
@@ -69,6 +75,7 @@ class Game(commands.Cog):
             await ctx.send("**A game is already in progress, stop it before starting a new game.**")
         else:
             letter = self.bot.game.start()
+            self.bot.game.save()
             await ctx.send(f"**The game is starting. The starting letter is `{letter}`.**")
 
     @commands.command(name="end", help="End the current game")
@@ -92,15 +99,16 @@ class Game(commands.Cog):
             await message.reply("**Only a single word is accepted.**")
             return
 
-        if self.bot.game.is_last_player(message.author):
+        if self.bot.game.is_last_player(message.author.id):
             await message.reply("**You cannot answer two times in a row!**")
             return
         if self.bot.game.is_word_used(word):
             await message.reply("**This word was already used.**")
             return
 
-        if self.bot.game.next_word(message.author, word):
+        if self.bot.game.next_word(message.author.id, word):
             await message.add_reaction("\U00002705")
+            self.bot.game.save()
         else:
             await message.reply(f"**Word '{word}' is invalid.**")
 
