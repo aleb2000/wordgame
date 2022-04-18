@@ -3,6 +3,7 @@ import discord
 import keep_alive
 from discord.ext import commands
 from wordgame import WordGame
+from leaderboard import Leaderboard
 from replit import db
 
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -10,10 +11,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 keep_alive.keep_alive()
 
 bot = commands.Bot(command_prefix='$')
-bot.channel = None
 
-
-bot.game = WordGame()
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -31,8 +29,13 @@ class Manage(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        self.bot.channel = None
         if "channel_id" in db.keys():
             self.bot.channel = self.bot.get_channel(int(db["channel_id"]))
+        self.bot.leaderboard = Leaderboard()
+        self.bot.leaderboard.load()
+        print(self.bot.leaderboard.points)
+        self.bot.game = WordGame(self.bot.leaderboard)
         self.bot.game.load()
 
     @commands.command(name="set-channel", help="Set the current channel as the channel to play the word game")
@@ -86,7 +89,19 @@ class Game(commands.Cog):
         else:
             await ctx.send("**The game has ended**")
             self.bot.game.end()
-    
+            self.bot.leaderboard.save()
+
+    @commands.command(name="leaderboard", help="Show the leaderboard")
+    @commands.check(valid_channel)
+    async def leaderboard(self, ctx):
+        embed = discord.Embed(title="Leaderboard", type="rich", description="The current leaderboard", color=0x11AA11)
+        counter = 1
+        for (id, score) in self.bot.leaderboard.sort().items():
+            name = f"{counter}. {(await self.bot.fetch_user(id)).name}"
+            embed.add_field(name=name, value=score, inline=False)
+            counter += 1
+        
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message):
@@ -110,7 +125,7 @@ class Game(commands.Cog):
             await message.add_reaction("\U00002705")
             self.bot.game.save()
         else:
-            await message.reply(f"**Word '{word}' is invalid.**")
+            await message.reply(f"**Invalid word.**")
 
 
     async def cog_check(self, ctx):
