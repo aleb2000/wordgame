@@ -106,7 +106,7 @@ class Game(commands.Cog):
     @commands.Cog.listener("on_message")
     async def on_message(self, message):
         ctx = await self.bot.get_context(message)
-        word = message.content.strip().lower()
+        word = message.content.strip()
         if not await self.is_word_input(ctx) or word[0] == '.':
             return
 
