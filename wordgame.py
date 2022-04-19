@@ -36,7 +36,7 @@ class WordGame:
         return False
 
     def is_word_valid(self, word):
-        return self.get_current_letter() == word[0] and not self.is_word_used(word) and self.spellcheck(word)
+        return self.get_current_letter().lower() == word.lower()[0] and not self.is_word_used(word) and self.spellcheck(word)
 
     def is_last_player(self, player_id):
         return player_id == self.last_player_id
